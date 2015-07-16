@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\aflImage.cpp" />
+    <ClCompile Include="src\aflInput.cpp" />
+    <ClCompile Include="src\aflSock.cpp" />
+    <ClCompile Include="src\aflStd.cpp" />
+    <ClCompile Include="src\aflWindow.cpp" />
+    <ClCompile Include="src\aflWindowCtrl.cpp" />
+    <ClCompile Include="src\aflWinTool.cpp" />
+    <ClCompile Include="src\aflXml.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\aflImage.h" />
+    <ClInclude Include="include\aflInput.h" />
+    <ClInclude Include="include\aflSock.h" />
+    <ClInclude Include="include\aflStd.h" />
+    <ClInclude Include="include\aflWindow.h" />
+    <ClInclude Include="include\aflWindowCtrl.h" />
+    <ClInclude Include="include\aflWinTool.h" />
+    <ClInclude Include="include\aflXml.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="glsl">
+      <UniqueIdentifier>{892b32a2-f65c-46d8-8833-f37856da77e0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glsl\PS_TEXTURE.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_TEXTURE2.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_VCOLOR.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_BASE.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_BASE_BUMP.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_BASE_NL.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_BASE_SHADOW.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_BILLBOARD.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_EFFECT.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_FIELD.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_FIELD_W.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_FLAT.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_SDRAW.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_SKIN4.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_SKIN4_SHADOW.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_TEXTURE2.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_TEXTURE3D.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_VECTOR.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VS_VECTOR2.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\default.glsli">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_BASE_BUMP.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_FIELD.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_FIELD_W.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_FLAT.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\PS_TCOLOR.glsl">
+      <Filter>glsl</Filter>
+    </None>
+  </ItemGroup>
+</Project>
