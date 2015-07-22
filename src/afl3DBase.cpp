@@ -1764,6 +1764,26 @@ void FileObject::setScale(FLOAT x,FLOAT y,FLOAT z)
 	}
 }
 
+bool JsonModelPaser::save(LPCWSTR fileName, FileObject fileObject)
+{
+	FILE* file = _wfopen(fileName, L"wt");
+
+	//fwrite(header, 4, 1, file);
+	JsonHash json;
+	//JsonData<LPCSTR> d("JsonData");
+	json.add("FILEType",&JSON((LPCSTR)"Json3DObject"));
+
+	String s;
+	json.getString(s);
+	fwrite(s.c_str(),s.size(),1,file);
+	fclose(file);
+	return true;
+}
+FileObject JsonModelPaser::load(LPCSTR fileName)
+{
+
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // AnimationKey
 // アニメーションキー

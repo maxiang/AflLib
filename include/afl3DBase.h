@@ -465,7 +465,12 @@ struct FileObject
 	WString m_textComment;
 	WString m_textComment2;
 };
-
+class JsonModelPaser
+{
+public:
+	static bool save(LPCWSTR fileName,FileObject fileObject);
+	static FileObject load(LPCSTR fileName);
+};
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // MeshOptimize
 // レンダリング用メッシュ展開用

@@ -910,50 +910,33 @@ private:
 class JsonObject
 {
 public:
-	virtual void getString(String& dest,int level=0) = 0;
+	virtual void getString(String& dest,int level=0) const = 0;
 	virtual ~JsonObject(){}
 };
 template<typename T> class JsonData : public JsonObject
 {
 public:
-	JsonData(T data)
+	JsonData(const T& value)
 	{
-		m_data = data;
+		m_value = new T(value);
 	}
-	void getString(String& dest,int level=0)
+	void getString(String& dest,int level=0) const
 	{
 		dest = getData();
 	}
-	T& getData()
+	const T& getData() const
 	{
-		return m_data;
+		return *m_value.get();
 	}
 protected:
-	T m_data;
+	SP<T> m_value;
 };
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// JsonData
-// Jsonデータ管理用
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-template<> class JsonData<String> : public JsonObject
+template<class T> const JsonObject& JSON(const T& value)
 {
-public:
-	JsonData(String data);
-	void getString(String& dest, int level = 0);
-	String& getData();
-protected:
-	String m_data;
-};
-template<> class JsonData<LPCSTR> : public JsonObject
-{
-public:
-	JsonData(LPCSTR data);
-	void getString(String& dest, int level = 0);
-	String& getData();
-protected:
-	String m_data;
-};
+	return JsonData<T>(value);
+}
+template<> const JsonObject& JSON(const LPCSTR& value);
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // JsonArray
 // Jsonデータ管理用
@@ -961,7 +944,7 @@ protected:
 class JsonArray : public JsonObject
 {
 public:
-	void getString(String& dest,int level=0);
+	void getString(String& dest,int level=0) const;
 	void add(JsonObject* object);
 
 protected:
@@ -976,10 +959,10 @@ protected:
 class JsonHash : public JsonObject
 {
 public:
-	void add(LPCSTR name, JsonObject* object);
-	void getString(String& dest, int level = 0);
+	void add(LPCSTR name, const JsonObject* object);
+	void getString(String& dest, int level = 0) const;
 protected:
-	std::map<String, SP<JsonObject> > m_data;
+	std::map<String, SP<const JsonObject> > m_data;
 };
 template<class T> JsonObject* createJson(T value)
 {

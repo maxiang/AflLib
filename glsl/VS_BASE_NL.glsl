@@ -24,9 +24,7 @@ void main()
 	v_texCoord = TEXCOORD;
 
 	vec3 Nor = normalize(NORMAL*mat3(World));
-	float light = dot(Nor,normalize(-LightDir));
-	light = light*LightPri+(1.0-LightPri);
-	v_color.xyz = COLOR.xyz*light;
+	v_color.xyz = COLOR.xyz;
 	v_color.w = COLOR.w;
 	
 	if(gl_Position.z < PDN)

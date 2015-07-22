@@ -29,8 +29,5 @@ void main()
 	
 	v_texCoord = TEXCOORD;
 	v_color = COLOR;
-	
-//	if(gl_Position.z > PDF)
-//		v_color.w = v_color.w * (1.0-(gl_Position.z-PDF)/PDF2);
-	
+
 }

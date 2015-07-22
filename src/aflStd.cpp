@@ -1495,7 +1495,7 @@ DWORD ThreadTimer::onProc(LPVOID pvoid)
 
 	return 0;
 }
-void JsonEscape(String& dest,LPCSTR src)
+void JsonEscape(String& dest,const LPCSTR src)
 {
 	ConvertItem item;
 	item["\""] = "\\\"";
@@ -1504,42 +1504,14 @@ void JsonEscape(String& dest,LPCSTR src)
 	replaceString(dest, src, &item);
 }
 
-JsonData<String>::JsonData(String data)
-{
-	m_data = data;
-}
-void JsonData<String>::getString(String& dest, int level)
-{
-	String data;
-	JsonEscape(data, getData().c_str());
-	dest.printf("\"%s\"", data.c_str());
-}
-String& JsonData<String>::getData()
-{
-	return m_data;
-}
 
-JsonData<LPCSTR>::JsonData(LPCSTR data)
-{
-	m_data = data;
-}
-void JsonData<LPCSTR>::getString(String& dest, int level)
-{
-	String data;
-	JsonEscape(data, getData().c_str());
-	dest.printf("\"%s\"", data.c_str());
-}
-String& JsonData<LPCSTR>::getData()
-{
-	return m_data;
-}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // JsonArray
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void JsonArray::getString(String& dest,int level)
+void JsonArray::getString(String& dest,int level) const
 {
 	bool flag = false;
 	//dest = getData();
@@ -1566,11 +1538,11 @@ void JsonArray::add(JsonObject* object)
 // JsonHash
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void JsonHash::add(LPCSTR name, JsonObject* object)
+void JsonHash::add(LPCSTR name, const JsonObject* object)
 {
 	m_data[name] = object;
 }
-void JsonHash::getString(String& dest, int level)
+void JsonHash::getString(String& dest, int level) const
 {
 	bool flag = false;
 	//dest = getData();
@@ -1582,7 +1554,7 @@ void JsonHash::getString(String& dest, int level)
 	for (i = 0; i < level; i++)
 		dest += "\t";
 	dest += "{\n";
-	for (auto it = m_data.begin(); it != m_data.end(); ++it)
+	for (auto it = m_data.cbegin(); it != m_data.cend(); ++it)
 	{
 
 
@@ -1601,6 +1573,10 @@ void JsonHash::getString(String& dest, int level)
 	for (i = 0; i < level; i++)
 		dest += "\t";
 	dest += "}";
+}
+template<> const JsonObject& JSON(const LPCSTR& value)
+{
+	return JsonData<String>(value);
 }
 //namespace
 };
