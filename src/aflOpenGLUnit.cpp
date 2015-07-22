@@ -202,9 +202,9 @@ bool Unit::openFile(LPCSTR fileName)
 	if(!fileObject.load(fileName))
 		return false;
 
-	WString f = fileName;
-	f += L".json";
-	JsonModelPaser::save(f.c_str(),fileObject);
+	//WString f = fileName;
+	//f += L".json";
+	//JsonModelPaser::save(f.c_str(),fileObject);
 
 	createObject(&fileObject);
 	return true;
