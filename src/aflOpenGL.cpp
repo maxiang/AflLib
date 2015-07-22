@@ -357,7 +357,12 @@ bool GLImage::openImage(LPCSTR fileName,bool filter)
 	{
 		m_bitmap = Gdiplus::Bitmap::FromFile(UCS2(name), PixelFormat32bppARGB);
 		if (!m_bitmap)
+		{
+			String s;
+			s.printf("File not found: %s\n", fileName);
+			OutputDebugString(s.c_str());
 			return false;
+		}
 	}
 	if(m_bitmap->GetLastStatus() != Gdiplus::Ok)
 	{
@@ -1284,7 +1289,9 @@ bool Texture::open(LPCSTR fileName, bool filter)
 {
 	GLImage image;
 	if (!image.openImage(fileName))
+	{
 		return false;
+	}
 
 	Gdiplus::BitmapData* data = image.getBuffer();
 	m_imageWidth = data->Width;
