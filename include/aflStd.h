@@ -385,8 +385,11 @@ public:
 	String(FLOAT value);
 	String& operator=(LPCWSTR value);
 	String& operator=(LPCSTR value);
-	String& operator=(INT value);
-	String& operator=(FLOAT value);
+	String& operator=(const DWORD value);
+	String& operator=(const UINT value);
+	String& operator=(const INT value);
+	String& operator=(const FLOAT value);
+	String& operator=(const DOUBLE value);
 	INT vprintf(LPCSTR format,va_list argptr);
 	INT printf(LPCSTR format, ...);
 	INT appendf(LPCSTR format, ...);
@@ -906,49 +909,58 @@ private:
 // JsonObject
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-class JsonObject
+class JsonObj
 {
 public:
-	virtual void getString(String& dest,int level=0) const = 0;
-	virtual ~JsonObject(){}
+	virtual const type_info& getType() const = 0;
+	virtual void getString(String& dest, int level = 0) const = 0;
 };
-template<typename T> class JsonData : public JsonObject
+typedef SP<JsonObj> JsonObject;
+
+template<typename T> class JsonData : public JsonObj
 {
 public:
 	JsonData(const T& value)
 	{
-		m_value = new T(value);
+		m_value = value;
 	}
-	void getString(String& dest,int level=0) const
+	const type_info& getType() const
 	{
-		dest = getData();
+		return typeid(T);
 	}
-	const T& getData() const
+	void getString(String& dest, int level = 0) const
 	{
-		return *m_value.get();
+		String s;
+		s = m_value;
+		if (getType() == typeid(String))
+		{
+			dest.printf("\"%s\"", s.c_str());
+		}
+		else
+			dest = s;
 	}
 protected:
-	SP<T> m_value;
+	T m_value;
 };
 
-template<class T> const JsonObject& JSON(const T& value)
-{
-	return JsonData<T>(value);
-}
-template<> const JsonObject& JSON(const LPCSTR& value);
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // JsonArray
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-class JsonArray : public JsonObject
+class JsonArray : public JsonObj
 {
 public:
+	const type_info& getType() const
+	{
+		return typeid(JsonArray);
+	}
 	void getString(String& dest,int level=0) const;
-	void add(JsonObject* object);
+	void add(const JsonObject& object);
 
 protected:
-	std::vector<SP<JsonObject> > m_data;
+	std::vector<JsonObject> m_data;
 };
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -956,17 +968,38 @@ protected:
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class JsonHash : public JsonObject
+class JsonHash : public JsonObj
 {
 public:
-	void add(LPCSTR name, const JsonObject* object);
+	const type_info& getType() const
+	{
+		return typeid(JsonArray);
+	}
+	void add(LPCSTR name, const JsonObject& object);
 	void getString(String& dest, int level = 0) const;
 protected:
-	std::map<String, SP<const JsonObject> > m_data;
+	std::map<String, JsonObject> m_data;
 };
 template<class T> JsonObject* createJson(T value)
 {
 	return new JsonData<T>(value);
+}
+
+template <class T> inline JsonObject JSON(const T& value)
+{
+	return JsonObject(new JsonData<T>(value));
+}
+inline JsonObject JSON(const char* value)
+{
+	return JsonObject(new JsonData<String>(String(value)));
+}
+inline JsonObject JSON(const JsonHash& value)
+{
+	return JsonObject(new JsonHash(value));
+}
+inline JsonObject JSON(const JsonArray& value)
+{
+	return JsonObject(new JsonArray(value));
 }
 //namespace
 }

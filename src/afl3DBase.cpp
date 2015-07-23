@@ -1764,14 +1764,35 @@ void FileObject::setScale(FLOAT x,FLOAT y,FLOAT z)
 	}
 }
 
-bool JsonModelPaser::save(LPCWSTR fileName, FileObject fileObject)
+bool JsonModelPaser::save(LPCWSTR fileName, FileObject* fileObject)
 {
 	FILE* file = _wfopen(fileName, L"wt");
 
 	//fwrite(header, 4, 1, file);
 	JsonHash json;
 	//JsonData<LPCSTR> d("JsonData");
-	json.add("FILEType",&JSON((LPCSTR)"Json3DObject"));
+	json.add("Type",JSON("Json3DObject"));
+	json.add("Version", JSON(1.0));
+
+	auto& frame = fileObject->frame;
+
+	JsonArray jsonFrames;
+
+	std::list<FrameData>::iterator itFrame;
+	for (itFrame = frame.begin();itFrame != frame.end();++itFrame)
+	{
+		saveFrame(jsonFrames, *itFrame);
+	}
+	json.add("frame", JSON(jsonFrames));
+
+	auto anime = fileObject->anime;
+
+	std::map<String, ANIMATIONSET>::iterator itAnime;
+	for (itAnime = anime.begin();itAnime != anime.end();++itAnime)
+	{
+		//saveAnimeSet(json, itAnime->first.c_str(), itAnime->second);
+	}
+
 
 	String s;
 	json.getString(s);
@@ -1779,9 +1800,185 @@ bool JsonModelPaser::save(LPCWSTR fileName, FileObject fileObject)
 	fclose(file);
 	return true;
 }
-FileObject JsonModelPaser::load(LPCSTR fileName)
+bool JsonModelPaser::saveFrame(JsonArray& json, FrameData& frame)
 {
+	//サイズ用空間の確保
+	JsonHash jsonFrame;
 
+	JsonArray jsonMatrix;
+	for (int i = 0;i < 16;i++)
+		jsonMatrix.add(JSON(frame.matrix.f[i]));
+	jsonFrame.add("matrix", JSON(jsonMatrix));
+
+	//フレーム名
+	jsonFrame.add("name", JSON(frame.name.c_str()));
+
+	//メッシュの保存
+	saveMesh(jsonFrame, frame.mesh);
+
+	JsonArray jsonFrames;
+
+	//チャイルドフレームの保存
+	std::list<FrameData>::iterator it;
+	for (it = frame.frameChild.begin();it != frame.frameChild.end();++it)
+	{
+		saveFrame(jsonFrames, *it);
+	}
+	jsonFrame.add("frame", JSON(jsonFrames));
+
+	json.add(JSON(jsonFrame));
+
+	return true;
+}
+void saveData(JsonHash& json, LPCSTR name, const std::vector<INDEX4>& values)
+{
+	JsonArray jsonArray;
+	for (auto it = values.cbegin();it != values.cend();++it)
+	{
+		jsonArray.add(JSON(it->type));
+		jsonArray.add(JSON(it->data[0]));
+		jsonArray.add(JSON(it->data[1]));
+		jsonArray.add(JSON(it->data[2]));
+		jsonArray.add(JSON(it->data[3]));
+	}
+	json.add(name, JSON(jsonArray));
+}
+void saveData(JsonHash& json, LPCSTR name, const std::vector<NVector3>& values)
+{
+	JsonArray jsonArray;
+	for (auto it = values.cbegin();it != values.cend();++it)
+	{
+		jsonArray.add(JSON(it->x));
+		jsonArray.add(JSON(it->y));
+		jsonArray.add(JSON(it->z));
+	}
+	json.add(name, JSON(jsonArray));
+}
+void saveData(JsonHash& json, LPCSTR name, const std::vector<TEXTUREUV>& values)
+{
+	JsonArray jsonArray;
+	for (auto it = values.cbegin();it != values.cend();++it)
+	{
+		jsonArray.add(JSON(it->u));
+		jsonArray.add(JSON(it->v));
+	}
+	json.add(name, JSON(jsonArray));
+}
+void saveData(JsonHash& json, LPCSTR name, const std::vector<COLOR4>& values)
+{
+	JsonArray jsonArray;
+	for (auto it = values.cbegin();it != values.cend();++it)
+	{
+		jsonArray.add(JSON(it->a));
+		jsonArray.add(JSON(it->r));
+		jsonArray.add(JSON(it->g));
+		jsonArray.add(JSON(it->b));
+	}
+	json.add(name, JSON(jsonArray));
+}
+void saveData(JsonHash& json, LPCSTR name, COLOR4& value)
+{
+	JsonArray jsonArray;
+	jsonArray.add(JSON(value.a));
+	jsonArray.add(JSON(value.r));
+	jsonArray.add(JSON(value.g));
+	jsonArray.add(JSON(value.b));
+	json.add(name, JSON(jsonArray));
+}
+void saveData(JsonHash& json, LPCSTR name, const std::vector<DWORD>& values)
+{
+	JsonArray jsonArray;
+	for (auto it = values.cbegin();it != values.cend();++it)
+	{
+		jsonArray.add(JSON(*it));
+	}
+	json.add(name, JSON(jsonArray));
+}
+void JsonModelPaser::saveMesh(JsonHash& jsonFrame, MeshData& mesh)
+{
+	//データが無ければ戻る
+	if (!mesh.vertexIndex.size())
+		return;
+
+	JsonHash jsonMesh;
+
+	//頂点インデックスの保存
+	saveData(jsonMesh, "VINDEX", mesh.vertexIndex);
+	//頂点データの保存
+	saveData(jsonMesh, "VERTEX", mesh.vertexData);
+	//法線インデックスの保存
+	saveData(jsonMesh, "NINDEX", mesh.normalIndex);
+	//法線データの保存
+	saveData(jsonMesh, "NORMAL", mesh.normalData);
+	//UVインデックスの保存
+	saveData(jsonMesh, "UINDEX", mesh.uvIndex);
+	//UVデータの保存
+	saveData(jsonMesh, "UV", mesh.uvData);
+	//カラーインデックスの保存
+	saveData(jsonMesh, "CINDEX", mesh.colorIndex);
+	//カラーデータの保存
+	saveData(jsonMesh, "COLOR", mesh.colorData);
+	//マテリアルインデックスの保存
+	saveData(jsonMesh, "MINDEX", mesh.materialIndex);
+
+	{
+		JsonArray jsonMaterials;
+
+		std::vector<MaterialData>::iterator it;
+		for (it = mesh.materialData.begin();it != mesh.materialData.end();++it)
+		{
+			JsonHash jsonMaterial;
+			//マテリアルデータ
+			saveData(jsonMaterial, "ambient", it->material.Ambient);
+			saveData(jsonMaterial, "diffuse", it->material.Diffuse);
+			saveData(jsonMaterial, "emissive", it->material.Emissive);
+			saveData(jsonMaterial, "specular", it->material.Specular);
+			jsonMaterial.add("power", JSON(it->material.Power));
+
+			JsonArray jsonTexture;
+			//テクスチャファイル名
+			std::list<String>::iterator itTex;
+			for (itTex = it->name.begin();itTex != it->name.end();++itTex)
+				jsonTexture.add(JSON(itTex->c_str()));
+			jsonMaterial.add("texture", JSON(jsonTexture));
+			jsonMaterials.add(JSON(jsonMaterial));
+		}
+		jsonMesh.add("material", JSON(jsonMaterials));
+	}
+/*	{
+		//ボーン数
+		INT size = (INT)mesh.boneData.size();
+		if (size)
+		{
+			INT seek = dataStart(file, "*BONE");
+
+
+			fwrite(&size, sizeof(INT), 1, file);
+
+			std::vector<BoneData>::iterator it;
+			for (it = mesh.boneData.begin();it != mesh.boneData.end();++it)
+			{
+				fwrite(&it->matrix, sizeof(NMatrix), 1, file);
+				INT weightCount = (INT)it->weight.size();
+				fwrite(&weightCount, sizeof(INT), 1, file);
+				std::map<INT, FLOAT>::iterator itMap;
+				for (itMap = it->weight.begin();itMap != it->weight.end();++itMap)
+				{
+					fwrite(&itMap->first, sizeof(INT), 1, file);
+					fwrite(&itMap->second, sizeof(FLOAT), 1, file);
+				}
+				fwrite(it->name.c_str(), it->name.length() + 1, 1, file);
+			}
+			dataEnd(file, seek);
+		}
+	}
+	*/
+	jsonFrame.add("MESH", JSON(jsonMesh));
+
+}
+FileObject* JsonModelPaser::load(LPCSTR fileName)
+{
+	return NULL;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

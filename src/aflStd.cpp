@@ -533,9 +533,24 @@ String& String::operator=(INT value)
 	printf("%s%d",c_str(),value);
 	return *this;
 }
+String& String::operator=(UINT value)
+{
+	printf("%s%u", c_str(), value);
+	return *this;
+}
+String& String::operator=(DWORD value)
+{
+	printf("%s%u", c_str(), value);
+	return *this;
+}
 String& String::operator=(FLOAT value)
 {
 	printf("%s%f",c_str(),value);
+	return *this;
+}
+String& String::operator=(DOUBLE value)
+{
+	printf("%s%f", c_str(), value);
 	return *this;
 }
 
@@ -1530,7 +1545,7 @@ void JsonArray::getString(String& dest,int level) const
 	}
 	dest += "]";
 }
-void JsonArray::add(JsonObject* object)
+void JsonArray::add(const JsonObject& object)
 {
 	m_data.push_back(object);
 }
@@ -1538,7 +1553,7 @@ void JsonArray::add(JsonObject* object)
 // JsonHash
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void JsonHash::add(LPCSTR name, const JsonObject* object)
+void JsonHash::add(LPCSTR name, const JsonObject& object)
 {
 	m_data[name] = object;
 }
@@ -1574,9 +1589,6 @@ void JsonHash::getString(String& dest, int level) const
 		dest += "\t";
 	dest += "}";
 }
-template<> const JsonObject& JSON(const LPCSTR& value)
-{
-	return JsonData<String>(value);
-}
+
 //namespace
 };

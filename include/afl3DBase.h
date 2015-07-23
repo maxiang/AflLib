@@ -468,8 +468,10 @@ struct FileObject
 class JsonModelPaser
 {
 public:
-	static bool save(LPCWSTR fileName,FileObject fileObject);
-	static FileObject load(LPCSTR fileName);
+	static bool save(LPCWSTR fileName,FileObject* fileObject);
+	static FileObject* load(LPCSTR fileName);
+	static bool saveFrame(JsonArray& json, FrameData& frameData);
+	static void saveMesh(JsonHash& jsonFrame, MeshData& mesh);
 };
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // MeshOptimize
