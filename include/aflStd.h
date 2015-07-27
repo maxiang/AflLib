@@ -7,6 +7,7 @@
 #include <map>
 #include <vector>
 #include <cstdarg>
+#include <typeinfo>
 
 //-----------------------------------------------------
 // UNIX Windows 共通化用
@@ -76,6 +77,7 @@
 	typedef int *PINT,INT,HANDLE;
 	typedef void const* LPCVOID;
 	typedef float FLOAT,*PFLOAT;
+	typedef double DOUBLE,*PDOUBLE;
 	#define THANDLE pthread_t
 	#define _byteswap_ulong __builtin_bswap32  
 	#define TRUE 1
@@ -909,98 +911,125 @@ private:
 // JsonObject
 // Jsonデータ管理用
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-class JsonObj
+class JsonObject
 {
-public:
-	virtual const type_info& getType() const = 0;
-	virtual void getString(String& dest, int level = 0) const = 0;
-};
-typedef SP<JsonObj> JsonObject;
-
-template<typename T> class JsonData : public JsonObj
-{
-public:
-	JsonData(const T& value)
+	enum
 	{
-		m_value = value;
-	}
-	const type_info& getType() const
+		JSON_NULL,
+		JSON_INT,
+		JSON_STRING,
+		JSON_DOUBLE,
+		JSON_BOOL,
+		JSON_HASH,
+		JSON_ARRAY
+	};
+	class JObjTemp
 	{
-		return typeid(T);
-	}
-	void getString(String& dest, int level = 0) const
-	{
-		String s;
-		s = m_value;
-		if (getType() == typeid(String))
+	public:
+		JObjTemp();
+		JObjTemp(INT value);
+		JObjTemp(DOUBLE value);
+		JObjTemp(boolean value);
+		JObjTemp(const LPCSTR value);
+		template<class T> inline void add(const T& value)
 		{
-			dest.printf("\"%s\"", s.c_str());
+			add(JsonObject(value));
 		}
-		else
-			dest = s;
-	}
-protected:
-	T m_value;
-};
+		void createArray();
+		void createHash();
+		void add(const JsonObject& value);
+		const JsonObject& get(INT index) const;
+		const JsonObject& get(LPCSTR index) const;
+		void set(INT index, JsonObject& object);
+		void set(LPCSTR name, JsonObject& object);
+		void release();
+		virtual ~JObjTemp();
+		INT getInt() const;
+		LPCSTR getJson(int level) const;
+		LPCSTR getString() const;
+		INT getType() const;
+	protected:
+		int mType;
+		void* mData;
+	};
 
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// JsonArray
-// Jsonデータ管理用
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-class JsonArray : public JsonObj
-{
 public:
-	const type_info& getType() const
+	JsonObject()
 	{
-		return typeid(JsonArray);
 	}
-	void getString(String& dest,int level=0) const;
-	void add(const JsonObject& object);
 
-protected:
-	std::vector<JsonObject> m_data;
-};
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// JsonHash
-// Jsonデータ管理用
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-class JsonHash : public JsonObj
-{
-public:
-	const type_info& getType() const
+	JsonObject(const INT& value)
 	{
-		return typeid(JsonArray);
+		*this = value;
 	}
-	void add(LPCSTR name, const JsonObject& object);
-	void getString(String& dest, int level = 0) const;
-protected:
-	std::map<String, JsonObject> m_data;
-};
-template<class T> JsonObject* createJson(T value)
-{
-	return new JsonData<T>(value);
-}
+	JsonObject(const LPCSTR& value)
+	{
+		*this = value;
+	}
+	JsonObject& operator=(const INT& value)
+	{
+		JObjTemp* temp = new JObjTemp(value);
+		m_object = temp;
+		return *this;
+	}
+	JsonObject& operator=(const LPCSTR& value)
+	{
+		JObjTemp* temp = new JObjTemp(value);
+		m_object = temp;
+		return *this;
+	}
+	const JsonObject& operator[](const INT index)
+	{
+		if (!m_object.get())
+			m_object = new JObjTemp();
+		return m_object->get(index);
+	}
+	const JsonObject& operator[](const LPCSTR index)
+	{
+		if (!m_object.get())
+			m_object = new JObjTemp();
+		return m_object->get(index);
+	}
 
-template <class T> inline JsonObject JSON(const T& value)
-{
-	return JsonObject(new JsonData<T>(value));
-}
-inline JsonObject JSON(const char* value)
-{
-	return JsonObject(new JsonData<String>(String(value)));
-}
-inline JsonObject JSON(const JsonHash& value)
-{
-	return JsonObject(new JsonHash(value));
-}
-inline JsonObject JSON(const JsonArray& value)
-{
-	return JsonObject(new JsonArray(value));
-}
+	template<class T> void set(INT index, const T& value)
+	{
+		if (!m_object.get())
+			m_object = new JObjTemp();
+		m_object->set(index, JsonObject(value));
+	}
+	template<class T> void set(LPCSTR name, const T& value)
+	{
+		if (!m_object.get())
+			m_object = new JObjTemp();
+		m_object->set(name, JsonObject(value));
+	}
+	template<class T> void add(const T& value)
+	{
+		if (!m_object.get())
+			m_object = new JObjTemp();
+
+		m_object->add(value);
+	}
+	operator LPCSTR() const
+	{
+		return m_object->getString();
+	}
+
+	operator INT() const
+	{
+		return m_object->getInt();
+	}
+	INT getType() const
+	{
+		return m_object->getType();
+	}
+	LPCSTR getJson(INT level = -1) const
+	{
+		return m_object->getJson(level);
+	}
+protected:
+	AFL::SP<JObjTemp> m_object;
+};
 //namespace
 }
 #define __INC_AFLSTD

@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <stdlib.h>
+#include <list>
 #include "aflStd.h"
 
 
@@ -1519,76 +1520,265 @@ void JsonEscape(String& dest,const LPCSTR src)
 	replaceString(dest, src, &item);
 }
 
-
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// JsonArray
-// Jsonデータ管理用
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void JsonArray::getString(String& dest,int level) const
+JsonObject::JObjTemp::JObjTemp()
 {
-	bool flag = false;
-	//dest = getData();
-	dest = "[";
-	for (auto it = m_data.begin(); it != m_data.end(); ++it)
+	mType = JSON_NULL;
+}
+
+JsonObject::JObjTemp::JObjTemp(INT value)
+{
+	mType = JSON_INT;
+	mData = new INT(value);
+}
+JsonObject::JObjTemp::JObjTemp(DOUBLE value)
+{
+	mType = JSON_DOUBLE;
+	mData = new DOUBLE(value);
+}
+JsonObject::JObjTemp::JObjTemp(boolean value)
+{
+	mType = JSON_BOOL;
+	mData = new boolean(value);
+}
+JsonObject::JObjTemp::JObjTemp(const LPCSTR value)
+{
+	mType = JSON_STRING;
+	mData = new std::string(value);
+}
+void JsonObject::JObjTemp::createArray()
+{
+	if (mType != JSON_ARRAY)
 	{
-		String work;
-		(*it)->getString(work, level);
-		if (flag)
-			dest.appendf(",%s", work.c_str());
-		else
+		release();
+		std::list<JsonObject>* list = new std::list<JsonObject>();
+		mType = JSON_ARRAY;
+		mData = list;
+	}
+}
+void JsonObject::JObjTemp::createHash()
+{
+	if (mType != JSON_HASH)
+	{
+		release();
+		std::map<std::string, JsonObject>* list = new std::map<std::string, JsonObject>();
+		mType = JSON_HASH;
+		mData = list;
+	}
+}
+void JsonObject::JObjTemp::add(const JsonObject& value)
+{
+	createArray();
+	((std::list<JsonObject>*)mData)->push_back(value);
+}
+const JsonObject& JsonObject::JObjTemp::get(INT index) const
+{
+	auto it = ((std::list<JsonObject>*)mData)->begin();
+	std::advance(it, index);
+	return *it;
+}
+const JsonObject& JsonObject::JObjTemp::get(LPCSTR index) const
+{
+	auto& map = *((std::map<AFL::String, JsonObject>*)mData);
+	return map[index];
+}
+void JsonObject::JObjTemp::set(INT index, JsonObject& object)
+{
+	createArray();
+	auto& list = *((std::list<JsonObject>*)mData);
+	if ((INT)list.size() < index + 1)
+		list.resize(index + 1);
+	auto it = list.begin();
+	std::advance(it, index);
+	*it = object;
+}
+void JsonObject::JObjTemp::set(LPCSTR name, JsonObject& object)
+{
+	createHash();
+	auto& map = *((std::map<std::string, JsonObject>*)mData);
+	map[name] = object;
+}
+void JsonObject::JObjTemp::release()
+{
+	switch (mType)
+	{
+	case JSON_INT:
+		delete (PINT)mData;
+		break;
+	case JSON_STRING:
+		delete (std::string*)mData;
+		break;
+	case JSON_DOUBLE:
+		delete (DOUBLE*)mData;
+		break;
+	case JSON_BOOL:
+		delete (boolean*)mData;
+		break;
+	case JSON_ARRAY:
+		delete (std::list<JsonObject>*)mData;
+		break;
+	case JSON_HASH:
+		delete (std::map<std::string, JsonObject>*)mData;
+		break;
+	}
+	mType = JSON_NULL;
+}
+JsonObject::JObjTemp::~JObjTemp()
+{
+	release();
+}
+INT JsonObject::JObjTemp::getInt() const
+{
+	switch (mType)
+	{
+	case JSON_INT:
+		return *((PINT)mData);
+	case JSON_DOUBLE:
+		return (INT)*((DOUBLE*)mData);
+	case JSON_BOOL:
+		return (INT)*(boolean*)mData;
+	case JSON_STRING:
+		return atoi(((std::string*)mData)->c_str());
+	}
+	return 0;
+}
+LPCSTR JsonObject::JObjTemp::getJson(int level) const
+{
+	static AFL::String s;
+	switch (mType)
+	{
+	case JSON_INT:
+		s.printf("%d", *((PINT)mData));
+		break;
+	case JSON_DOUBLE:
+		s.printf("%f", *((DOUBLE*)mData));
+		break;
+	case JSON_BOOL:
+		s = *(boolean*)mData ? "true" : "false";
+		break;
+	case JSON_STRING:
+		s.printf("\"%s\"", ((std::string*)mData)->c_str());
+		break;
+	case JSON_ARRAY:
+	{
+		auto& list = *((std::list<JsonObject>*)mData);
+		boolean flag = false;
+		AFL::String work;
+		work = "[";
+		for (auto it = list.begin(); it != list.end(); ++it)
 		{
-			flag = true;
-			dest.appendf("%s", work.c_str());
+			if (flag)
+				work.appendf(",%s", it->getJson());
+			else
+			{
+				flag = true;
+				work.appendf("%s", it->getJson());
+			}
 		}
+		work += "]";
+		s = work;
 	}
-	dest += "]";
-}
-void JsonArray::add(const JsonObject& object)
-{
-	m_data.push_back(object);
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// JsonHash
-// Jsonデータ管理用
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void JsonHash::add(LPCSTR name, const JsonObject& object)
-{
-	m_data[name] = object;
-}
-void JsonHash::getString(String& dest, int level) const
-{
-	bool flag = false;
-	//dest = getData();
-	dest.clear();
-	if (level)
-		dest += "\n";
-
-	int i;
-	for (i = 0; i < level; i++)
-		dest += "\t";
-	dest += "{\n";
-	for (auto it = m_data.cbegin(); it != m_data.cend(); ++it)
+	break;
+	case JSON_HASH:
 	{
+		auto& map = *(std::map<std::string, JsonObject>*)mData;
+		boolean flag = false;
+		AFL::String dest;
+		dest.clear();
+		if (level)
+			dest += "\n";
 
-
-		String name;
-		JsonEscape(name, it->first.c_str());
-		String work;
-		it->second->getString(work,level+1);
-		if (flag)
-			dest += ",\n";
-		for (i = 0; i < level + 1; i++)
+		int i;
+		for (i = 0; i < level; i++)
 			dest += "\t";
-		dest.appendf("\"%s\":%s", name.c_str(), work.c_str());
-		flag = true;
+		dest += "{\n";
+		for (auto it = map.cbegin(); it != map.cend(); ++it)
+		{
+			AFL::String name;
+			JsonEscape(name, it->first.c_str());
+			AFL::String work = it->second.getJson(level + 1);
+			if (flag)
+				dest += ",\n";
+			for (i = 0; i < level + 1; i++)
+				dest += "\t";
+			dest.appendf("\"%s\":%s", name.c_str(), work.c_str());
+			flag = true;
+		}
+		dest += "\n";
+		for (i = 0; i < level; i++)
+			dest += "\t";
+		dest += "}";
+		s = dest;
 	}
-	dest += "\n";
-	for (i = 0; i < level; i++)
-		dest += "\t";
-	dest += "}";
+	break;
+	}
+	return s.c_str();
 }
+LPCSTR JsonObject::JObjTemp::getString() const
+{
+	static AFL::String s;
+	switch (mType)
+	{
+	case JSON_INT:
+		s.printf("%d", *((PINT)mData));
+		break;
+	case JSON_DOUBLE:
+		s.printf("%f", *((DOUBLE*)mData));
+		break;
+	case JSON_BOOL:
+		s = *(boolean*)mData ? "true" : "false";
+		break;
+	case JSON_STRING:
+		return ((std::string*)mData)->c_str();
+	case JSON_ARRAY:
+	{
+		auto& list = *((std::list<JsonObject>*)mData);
+		boolean flag = false;
+		AFL::String work;
+		work = "[";
+		for (auto it = list.begin(); it != list.end(); ++it)
+		{
+			if (flag)
+				work.appendf(",%s", (LPCSTR)*it);
+			else
+			{
+				flag = true;
+				work.appendf("%s", (LPCSTR)*it);
+			}
+		}
+		work += "]";
+		s = work;
+	}
+	break;
+	case JSON_HASH:
+	{
+		auto& map = *(std::map<std::string, JsonObject>*)mData;
+		boolean flag = false;
+		AFL::String work;
+		work = "{";
+		for (auto it = map.begin(); it != map.end(); ++it)
+		{
+			if (flag)
+				work.appendf(",\"%s\":%s", it->first.c_str(), (LPCSTR)it->second);
+			else
+			{
+				flag = true;
+				work.appendf("\"%s\":%s", it->first.c_str(), (LPCSTR)it->second);
+			}
+		}
+		work += "}";
+		s = work;
+	}
+	break;
+	}
+	return s.c_str();
+}
+INT JsonObject::JObjTemp::getType() const
+{
+	return mType;
+}
+
+
+
 
 //namespace
 };
