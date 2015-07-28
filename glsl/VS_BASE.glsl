@@ -28,7 +28,7 @@ void main()
 
 	light = light*LightPri+(1.0-LightPri);
 	light = max(light,0.2); 
-	v_light = light;
+	v_light = vec4(light);
 	v_light.w = 1.0;
 	v_color.xyz = COLOR.xyz*light;
 	v_color.w = COLOR.w;

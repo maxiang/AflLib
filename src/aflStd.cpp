@@ -1530,15 +1530,25 @@ JsonObject::JObjTemp::JObjTemp(INT value)
 	mType = JSON_INT;
 	mData = new INT(value);
 }
+JsonObject::JObjTemp::JObjTemp(UINT value)
+{
+	mType = JSON_INT;
+	mData = new INT(value);
+}
+JsonObject::JObjTemp::JObjTemp(ULONG value)
+{
+	mType = JSON_INT;
+	mData = new INT(value);
+}
 JsonObject::JObjTemp::JObjTemp(DOUBLE value)
 {
 	mType = JSON_DOUBLE;
 	mData = new DOUBLE(value);
 }
-JsonObject::JObjTemp::JObjTemp(boolean value)
+JsonObject::JObjTemp::JObjTemp(bool value)
 {
 	mType = JSON_BOOL;
-	mData = new boolean(value);
+	mData = new bool(value);
 }
 JsonObject::JObjTemp::JObjTemp(const LPCSTR value)
 {
@@ -1581,7 +1591,7 @@ const JsonObject& JsonObject::JObjTemp::get(LPCSTR index) const
 	auto& map = *((std::map<AFL::String, JsonObject>*)mData);
 	return map[index];
 }
-void JsonObject::JObjTemp::set(INT index, JsonObject& object)
+void JsonObject::JObjTemp::set(INT index, const JsonObject& object)
 {
 	createArray();
 	auto& list = *((std::list<JsonObject>*)mData);
@@ -1591,7 +1601,7 @@ void JsonObject::JObjTemp::set(INT index, JsonObject& object)
 	std::advance(it, index);
 	*it = object;
 }
-void JsonObject::JObjTemp::set(LPCSTR name, JsonObject& object)
+void JsonObject::JObjTemp::set(LPCSTR name, const JsonObject& object)
 {
 	createHash();
 	auto& map = *((std::map<std::string, JsonObject>*)mData);
@@ -1611,7 +1621,7 @@ void JsonObject::JObjTemp::release()
 		delete (DOUBLE*)mData;
 		break;
 	case JSON_BOOL:
-		delete (boolean*)mData;
+		delete (bool*)mData;
 		break;
 	case JSON_ARRAY:
 		delete (std::list<JsonObject>*)mData;
@@ -1635,7 +1645,7 @@ INT JsonObject::JObjTemp::getInt() const
 	case JSON_DOUBLE:
 		return (INT)*((DOUBLE*)mData);
 	case JSON_BOOL:
-		return (INT)*(boolean*)mData;
+		return (INT)*(bool*)mData;
 	case JSON_STRING:
 		return atoi(((std::string*)mData)->c_str());
 	}
@@ -1646,6 +1656,9 @@ LPCSTR JsonObject::JObjTemp::getJson(int level) const
 	static AFL::String s;
 	switch (mType)
 	{
+	case JSON_NULL:
+		s = "null";
+		break;
 	case JSON_INT:
 		s.printf("%d", *((PINT)mData));
 		break;
@@ -1653,7 +1666,7 @@ LPCSTR JsonObject::JObjTemp::getJson(int level) const
 		s.printf("%f", *((DOUBLE*)mData));
 		break;
 	case JSON_BOOL:
-		s = *(boolean*)mData ? "true" : "false";
+		s = *(bool*)mData ? "true" : "false";
 		break;
 	case JSON_STRING:
 		s.printf("\"%s\"", ((std::string*)mData)->c_str());
@@ -1661,7 +1674,7 @@ LPCSTR JsonObject::JObjTemp::getJson(int level) const
 	case JSON_ARRAY:
 	{
 		auto& list = *((std::list<JsonObject>*)mData);
-		boolean flag = false;
+		bool flag = false;
 		AFL::String work;
 		work = "[";
 		for (auto it = list.begin(); it != list.end(); ++it)
@@ -1681,7 +1694,7 @@ LPCSTR JsonObject::JObjTemp::getJson(int level) const
 	case JSON_HASH:
 	{
 		auto& map = *(std::map<std::string, JsonObject>*)mData;
-		boolean flag = false;
+		bool flag = false;
 		AFL::String dest;
 		dest.clear();
 		if (level)
@@ -1691,7 +1704,7 @@ LPCSTR JsonObject::JObjTemp::getJson(int level) const
 		for (i = 0; i < level; i++)
 			dest += "\t";
 		dest += "{\n";
-		for (auto it = map.cbegin(); it != map.cend(); ++it)
+		for (auto it = map.begin(); it != map.end(); ++it)
 		{
 			AFL::String name;
 			JsonEscape(name, it->first.c_str());
@@ -1725,14 +1738,14 @@ LPCSTR JsonObject::JObjTemp::getString() const
 		s.printf("%f", *((DOUBLE*)mData));
 		break;
 	case JSON_BOOL:
-		s = *(boolean*)mData ? "true" : "false";
+		s = *(bool*)mData ? "true" : "false";
 		break;
 	case JSON_STRING:
 		return ((std::string*)mData)->c_str();
 	case JSON_ARRAY:
 	{
 		auto& list = *((std::list<JsonObject>*)mData);
-		boolean flag = false;
+		bool flag = false;
 		AFL::String work;
 		work = "[";
 		for (auto it = list.begin(); it != list.end(); ++it)
@@ -1752,7 +1765,7 @@ LPCSTR JsonObject::JObjTemp::getString() const
 	case JSON_HASH:
 	{
 		auto& map = *(std::map<std::string, JsonObject>*)mData;
-		boolean flag = false;
+		bool flag = false;
 		AFL::String work;
 		work = "{";
 		for (auto it = map.begin(); it != map.end(); ++it)

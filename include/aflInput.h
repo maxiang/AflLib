@@ -26,6 +26,12 @@ class Input
 public:
 	Input();
 	virtual bool isDown(INT action);
+	FLOAT getDown(INT action)
+	{
+		if(isDown(action))
+			return 1.0f;
+		return 0.0f;
+	}
 	void setKey(INT action,INT keyCode);
 	void setWnd(HWND hwnd)
 	{

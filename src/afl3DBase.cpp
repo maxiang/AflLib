@@ -1766,24 +1766,27 @@ void FileObject::setScale(FLOAT x,FLOAT y,FLOAT z)
 
 bool JsonModelPaser::save(LPCWSTR fileName, FileObject* fileObject)
 {
+#ifndef __ANDROID__
 	FILE* file = _wfopen(fileName, L"wt");
-
+#else
+	FILE* file = fopen(UTF8(fileName), "wt");
+#endif
 	//fwrite(header, 4, 1, file);
-	JsonHash json;
+	JsonObject json;
 	//JsonData<LPCSTR> d("JsonData");
-	json.add("Type",JSON("Json3DObject"));
-	json.add("Version", JSON(1.0));
+	json.set("Type","Json3DObject");
+	json.set("Version", 1.0);
 
 	auto& frame = fileObject->frame;
 
-	JsonArray jsonFrames;
+	JsonObject jsonFrames;
 
 	std::list<FrameData>::iterator itFrame;
 	for (itFrame = frame.begin();itFrame != frame.end();++itFrame)
 	{
 		saveFrame(jsonFrames, *itFrame);
 	}
-	json.add("frame", JSON(jsonFrames));
+	json.set("frame", jsonFrames);
 
 	auto anime = fileObject->anime;
 
@@ -1794,29 +1797,28 @@ bool JsonModelPaser::save(LPCWSTR fileName, FileObject* fileObject)
 	}
 
 
-	String s;
-	json.getString(s);
+	String s = json.getJson(0);
 	fwrite(s.c_str(),s.size(),1,file);
 	fclose(file);
 	return true;
 }
-bool JsonModelPaser::saveFrame(JsonArray& json, FrameData& frame)
+bool JsonModelPaser::saveFrame(JsonObject& json, FrameData& frame)
 {
 	//サイズ用空間の確保
-	JsonHash jsonFrame;
+	JsonObject jsonFrame;
 
-	JsonArray jsonMatrix;
+	JsonObject jsonMatrix;
 	for (int i = 0;i < 16;i++)
-		jsonMatrix.add(JSON(frame.matrix.f[i]));
-	jsonFrame.add("matrix", JSON(jsonMatrix));
+		jsonMatrix.add(frame.matrix.f[i]);
+	jsonFrame.set("matrix", jsonMatrix);
 
 	//フレーム名
-	jsonFrame.add("name", JSON(frame.name.c_str()));
+	jsonFrame.set("name", frame.name.c_str());
 
 	//メッシュの保存
 	saveMesh(jsonFrame, frame.mesh);
 
-	JsonArray jsonFrames;
+	JsonObject jsonFrames;
 
 	//チャイルドフレームの保存
 	std::list<FrameData>::iterator it;
@@ -1824,83 +1826,83 @@ bool JsonModelPaser::saveFrame(JsonArray& json, FrameData& frame)
 	{
 		saveFrame(jsonFrames, *it);
 	}
-	jsonFrame.add("frame", JSON(jsonFrames));
+	jsonFrame.set("frame", jsonFrames);
 
-	json.add(JSON(jsonFrame));
+	json.add(jsonFrame);
 
 	return true;
 }
-void saveData(JsonHash& json, LPCSTR name, const std::vector<INDEX4>& values)
+void saveData(JsonObject& json, LPCSTR name, const std::vector<INDEX4>& values)
 {
-	JsonArray jsonArray;
-	for (auto it = values.cbegin();it != values.cend();++it)
+	JsonObject jsonArray;
+	for (auto it = values.begin();it != values.end();++it)
 	{
-		jsonArray.add(JSON(it->type));
-		jsonArray.add(JSON(it->data[0]));
-		jsonArray.add(JSON(it->data[1]));
-		jsonArray.add(JSON(it->data[2]));
-		jsonArray.add(JSON(it->data[3]));
+		jsonArray.add(it->type);
+		jsonArray.add(it->data[0]);
+		jsonArray.add(it->data[1]);
+		jsonArray.add(it->data[2]);
+		jsonArray.add(it->data[3]);
 	}
-	json.add(name, JSON(jsonArray));
+	json.set(name, jsonArray);
 }
-void saveData(JsonHash& json, LPCSTR name, const std::vector<NVector3>& values)
+void saveData(JsonObject& json, LPCSTR name, const std::vector<NVector3>& values)
 {
-	JsonArray jsonArray;
-	for (auto it = values.cbegin();it != values.cend();++it)
+	JsonObject jsonArray;
+	for (auto it = values.begin();it != values.end();++it)
 	{
-		jsonArray.add(JSON(it->x));
-		jsonArray.add(JSON(it->y));
-		jsonArray.add(JSON(it->z));
+		jsonArray.add(it->x);
+		jsonArray.add(it->y);
+		jsonArray.add(it->z);
 	}
-	json.add(name, JSON(jsonArray));
+	json.set(name, jsonArray);
 }
-void saveData(JsonHash& json, LPCSTR name, const std::vector<TEXTUREUV>& values)
+void saveData(JsonObject& json, LPCSTR name, const std::vector<TEXTUREUV>& values)
 {
-	JsonArray jsonArray;
-	for (auto it = values.cbegin();it != values.cend();++it)
+	JsonObject jsonArray;
+	for (auto it = values.begin();it != values.end();++it)
 	{
-		jsonArray.add(JSON(it->u));
-		jsonArray.add(JSON(it->v));
+		jsonArray.add(it->u);
+		jsonArray.add(it->v);
 	}
-	json.add(name, JSON(jsonArray));
+	json.set(name, jsonArray);
 }
-void saveData(JsonHash& json, LPCSTR name, const std::vector<COLOR4>& values)
+void saveData(JsonObject& json, LPCSTR name, const std::vector<COLOR4>& values)
 {
-	JsonArray jsonArray;
-	for (auto it = values.cbegin();it != values.cend();++it)
+	JsonObject jsonArray;
+	for (auto it = values.begin();it != values.end();++it)
 	{
-		jsonArray.add(JSON(it->a));
-		jsonArray.add(JSON(it->r));
-		jsonArray.add(JSON(it->g));
-		jsonArray.add(JSON(it->b));
+		jsonArray.add(it->a);
+		jsonArray.add(it->r);
+		jsonArray.add(it->g);
+		jsonArray.add(it->b);
 	}
-	json.add(name, JSON(jsonArray));
+	json.set(name, jsonArray);
 }
-void saveData(JsonHash& json, LPCSTR name, COLOR4& value)
+void saveData(JsonObject& json, LPCSTR name, COLOR4& value)
 {
-	JsonArray jsonArray;
-	jsonArray.add(JSON(value.a));
-	jsonArray.add(JSON(value.r));
-	jsonArray.add(JSON(value.g));
-	jsonArray.add(JSON(value.b));
-	json.add(name, JSON(jsonArray));
+	JsonObject jsonArray;
+	jsonArray.add(value.a);
+	jsonArray.add(value.r);
+	jsonArray.add(value.g);
+	jsonArray.add(value.b);
+	json.set(name,jsonArray);
 }
-void saveData(JsonHash& json, LPCSTR name, const std::vector<DWORD>& values)
+void saveData(JsonObject& json, LPCSTR name, const std::vector<DWORD>& values)
 {
-	JsonArray jsonArray;
-	for (auto it = values.cbegin();it != values.cend();++it)
+	JsonObject jsonArray;
+	for (auto it = values.begin();it != values.end();++it)
 	{
-		jsonArray.add(JSON(*it));
+		jsonArray.add(*it);
 	}
-	json.add(name, JSON(jsonArray));
+	json.set(name, jsonArray);
 }
-void JsonModelPaser::saveMesh(JsonHash& jsonFrame, MeshData& mesh)
+void JsonModelPaser::saveMesh(JsonObject& jsonFrame, MeshData& mesh)
 {
 	//データが無ければ戻る
 	if (!mesh.vertexIndex.size())
 		return;
 
-	JsonHash jsonMesh;
+	JsonObject jsonMesh;
 
 	//頂点インデックスの保存
 	saveData(jsonMesh, "VINDEX", mesh.vertexIndex);
@@ -1922,28 +1924,28 @@ void JsonModelPaser::saveMesh(JsonHash& jsonFrame, MeshData& mesh)
 	saveData(jsonMesh, "MINDEX", mesh.materialIndex);
 
 	{
-		JsonArray jsonMaterials;
+		JsonObject jsonMaterials;
 
 		std::vector<MaterialData>::iterator it;
 		for (it = mesh.materialData.begin();it != mesh.materialData.end();++it)
 		{
-			JsonHash jsonMaterial;
+			JsonObject jsonMaterial;
 			//マテリアルデータ
 			saveData(jsonMaterial, "ambient", it->material.Ambient);
 			saveData(jsonMaterial, "diffuse", it->material.Diffuse);
 			saveData(jsonMaterial, "emissive", it->material.Emissive);
 			saveData(jsonMaterial, "specular", it->material.Specular);
-			jsonMaterial.add("power", JSON(it->material.Power));
+			jsonMaterial.set("power", it->material.Power);
 
-			JsonArray jsonTexture;
+			JsonObject jsonTexture;
 			//テクスチャファイル名
 			std::list<String>::iterator itTex;
 			for (itTex = it->name.begin();itTex != it->name.end();++itTex)
-				jsonTexture.add(JSON(itTex->c_str()));
-			jsonMaterial.add("texture", JSON(jsonTexture));
-			jsonMaterials.add(JSON(jsonMaterial));
+				jsonTexture.add(itTex->c_str());
+			jsonMaterial.set("texture", jsonTexture);
+			jsonMaterials.add(jsonMaterial);
 		}
-		jsonMesh.add("material", JSON(jsonMaterials));
+		jsonMesh.set("material", jsonMaterials);
 	}
 /*	{
 		//ボーン数
@@ -1973,7 +1975,7 @@ void JsonModelPaser::saveMesh(JsonHash& jsonFrame, MeshData& mesh)
 		}
 	}
 	*/
-	jsonFrame.add("MESH", JSON(jsonMesh));
+	jsonFrame.set("MESH", jsonMesh);
 
 }
 FileObject* JsonModelPaser::load(LPCSTR fileName)

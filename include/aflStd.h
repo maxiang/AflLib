@@ -928,8 +928,10 @@ class JsonObject
 	public:
 		JObjTemp();
 		JObjTemp(INT value);
+		JObjTemp(UINT value);
+		JObjTemp(ULONG value);
 		JObjTemp(DOUBLE value);
-		JObjTemp(boolean value);
+		JObjTemp(bool value);
 		JObjTemp(const LPCSTR value);
 		template<class T> inline void add(const T& value)
 		{
@@ -940,8 +942,8 @@ class JsonObject
 		void add(const JsonObject& value);
 		const JsonObject& get(INT index) const;
 		const JsonObject& get(LPCSTR index) const;
-		void set(INT index, JsonObject& object);
-		void set(LPCSTR name, JsonObject& object);
+		void set(INT index, const JsonObject& object);
+		void set(LPCSTR name, const JsonObject& object);
 		void release();
 		virtual ~JObjTemp();
 		INT getInt() const;
@@ -958,7 +960,7 @@ public:
 	{
 	}
 
-	JsonObject(const INT& value)
+	template<class T> JsonObject(const T& value)
 	{
 		*this = value;
 	}
@@ -966,7 +968,7 @@ public:
 	{
 		*this = value;
 	}
-	JsonObject& operator=(const INT& value)
+	template<class T> JsonObject& operator=(const T& value)
 	{
 		JObjTemp* temp = new JObjTemp(value);
 		m_object = temp;
@@ -1025,6 +1027,8 @@ public:
 	}
 	LPCSTR getJson(INT level = -1) const
 	{
+		if (!m_object.get())
+			return "null";
 		return m_object->getJson(level);
 	}
 protected:

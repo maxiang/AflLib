@@ -273,8 +273,8 @@ protected:
 
 struct INDEX4
 {
-	DWORD type;
-	DWORD data[4];
+	INT type;
+	INT data[4];
 };
 struct TEXTUREUV
 {
