@@ -38,33 +38,6 @@
     <ClInclude Include="include\aflWinTool.h" />
     <ClInclude Include="include\aflXml.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="glsl\default.glsli" />
-    <None Include="glsl\PS_BASE_BUMP.glsl" />
-    <None Include="glsl\PS_FIELD.glsl" />
-    <None Include="glsl\PS_FIELD_W.glsl" />
-    <None Include="glsl\PS_FLAT.glsl" />
-    <None Include="glsl\PS_TCOLOR.glsl" />
-    <None Include="glsl\PS_TEXTURE.glsl" />
-    <None Include="glsl\PS_TEXTURE2.glsl" />
-    <None Include="glsl\PS_VCOLOR.glsl" />
-    <None Include="glsl\VS_BASE.glsl" />
-    <None Include="glsl\VS_BASE_BUMP.glsl" />
-    <None Include="glsl\VS_BASE_NL.glsl" />
-    <None Include="glsl\VS_BASE_SHADOW.glsl" />
-    <None Include="glsl\VS_BILLBOARD.glsl" />
-    <None Include="glsl\VS_EFFECT.glsl" />
-    <None Include="glsl\VS_FIELD.glsl" />
-    <None Include="glsl\VS_FIELD_W.glsl" />
-    <None Include="glsl\VS_FLAT.glsl" />
-    <None Include="glsl\VS_SDRAW.glsl" />
-    <None Include="glsl\VS_SKIN4.glsl" />
-    <None Include="glsl\VS_SKIN4_SHADOW.glsl" />
-    <None Include="glsl\VS_TEXTURE2.glsl" />
-    <None Include="glsl\VS_TEXTURE3D.glsl" />
-    <None Include="glsl\VS_VECTOR.glsl" />
-    <None Include="glsl\VS_VECTOR2.glsl" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BBD973A2-47D7-4623-9B60-6C6F48AD14E4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

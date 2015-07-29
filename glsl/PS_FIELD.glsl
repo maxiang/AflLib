@@ -21,5 +21,4 @@ void main()
 	float bright = dot(v_light,vect);
 	bright = bright*LightPri+(1.0-LightPri);
 	gl_FragColor = color * vec4(vec3(bright),1.0);
-
 }
